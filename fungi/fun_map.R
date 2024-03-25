@@ -1,8 +1,6 @@
 rm(list=ls())
 library(tidyverse)
 funmap <- read.csv("funmap.csv")
-# 获取20个nature杂志风格的颜色
-# filter删除metadata中plant为Pine的行
 funmap <- funmap %>% filter(funmap$Plant != "Pine")
 mycol <- c("#E64B35","#4DBBD5","#00A087","#3C5488",
            "#F39B7F","#4f72d2","#15a382","#DC0000","#c06e26",
