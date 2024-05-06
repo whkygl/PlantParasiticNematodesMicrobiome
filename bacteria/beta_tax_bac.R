@@ -62,54 +62,6 @@ p <- ggplot(resultlong, aes(x = plant_status, y = RelativeAbundance, fill = Phyl
   scale_x_discrete(labels = c("Disease", "Health"))
 p
 ggsave("tax_phylum.pdf", width = 5.93, height = 7.21, units = "in")
-## 绘制维恩图
-bac2 <- bacteria
-# 按属水平分类汇总
-bac2[,1311]
-bac2[,1311] <- gsub(",s.*","",bac2[,1311])
-# 若bac2最后一列包含g:则只保留g:后面的内容，否则改为Unassign
-bac2[,1311] <- ifelse(grepl("g:",bac2[,1311]),gsub(".*g:","",bac2[,1311]),"Unassign")
-bac2 <- bac2[,-1]
-# 对bac按最后一列用group_by分组求和
-bac2 <- bac2 %>% group_by(taxonomy) %>% summarise_all(sum)
-bac_fil <- bac2[,-1][, colSums(bac2[, -1]) != 0]
-bac_fil$taxonomy <- bac2$taxonomy
-bac_fil[,972]
-bac_fil[,971]
-# 将bac_fil的最后一列提到第一列
-bac_fil <- bac_fil[,c(972,1:971)]
-colSums(bac_fil[,-1])
-bac_fil <- as.data.frame(bac_fil)
-rownames(bac_fil) <- bac_fil[,1]
-bac_fil <- bac_fil[,-1]
-bac_fil <- bac_fil[rowSums(bac_fil)!=0,]
-intername <- intersect(colnames(bac_fil),metadata$NO)
-bac_fil <- bac_fil[,intername]
-rownames(metadata) <- metadata$NO
-metadata <- metadata[intername,]
-bac_fil$sum <- rowSums(bac_fil)
-bac_fil <- bac_fil[order(bac_fil$sum,decreasing = TRUE),]
-bac_fil <- bac_fil[,-972]
-bac_fil_t <- t(bac_fil)
-bac_fil_t <- as.data.frame(bac_fil_t)
-bac_fil_t$NO <- rownames(bac_fil_t)
-bac_filt <- merge(bac_fil_t,metadata,by="NO")
-bac_filt <- bac_filt[,c(2:2864,2868)]
-result <- bac_filt %>% 
-  group_by(plant_status) %>% 
-  summarize(across(everything(), mean, na.rm=TRUE))
-# 宽型数据变为长型数据
-resultlong <- result %>% gather(key = "Genus", value = "RelativeAbundance", -plant_status)
-resultlong <- resultlong %>% filter(Genus != "uncultured")
-resultlongD <- resultlong %>% filter(plant_status == "D" & RelativeAbundance != 0)
-resultlongH <- resultlong %>% filter(plant_status == "H" & RelativeAbundance != 0)
-p1 <- list(Disease=resultlongD$Genus,Health=resultlongH$Genus) %>% 
-  ggvenn(show_percentage = T,show_elements = F,label_sep = ",",
-         digits = 1,stroke_color = "black",
-         fill_color = c("#3B4992FF", "#008B45FF"),
-         set_name_color = c("#3B4992FF","#008B45FF"))
-p1
-ggsave("genus_venn.pdf", width = 5.93, height = 7.21, units = "in")
 # 按2000抽平
 otu_rare <- as.data.frame(t(rrarefy(t(bac_fil),2000)))
 # 删除otu_rare中列和小于2000的列

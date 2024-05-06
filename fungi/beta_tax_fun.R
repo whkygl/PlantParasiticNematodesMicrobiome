@@ -65,55 +65,6 @@ p <- ggplot(resultlong, aes(x = plant_status, y = RelativeAbundance, fill = Phyl
   scale_x_discrete(labels = c("Disease", "Health"))
 p
 ggsave("tax_phylum.pdf", width = 5.93, height = 7.21, units = "in")
-## 绘制维恩图
-fun2 <- fungi
-# 按属水平分类汇总
-fun2[,1311]
-fun2[,1311] <- gsub(",s.*","",fun2[,1311])
-# 若fun2最后一列包含g:则只保留g:后面的内容，否则改为Unassign
-fun2[,1311] <- ifelse(grepl("g:",fun2[,1311]),gsub(".*g:","",fun2[,1311]),"Unassign")
-fun2 <- fun2[,-1]
-# 对fun按最后一列用group_by分组求和
-fun2 <- fun2 %>% group_by(taxonomy) %>% summarise_all(sum)
-fun_fil <- fun2[,-1][, colSums(fun2[, -1]) != 0]
-fun_fil$taxonomy <- fun2$taxonomy
-fun_fil[,950]
-fun_fil[,949]
-# 将fun_fil的最后一列提到第一列
-fun_fil <- fun_fil[,c(950,1:949)]
-colSums(fun_fil[,-1])
-fun_fil <- as.data.frame(fun_fil)
-rownames(fun_fil) <- fun_fil[,1]
-fun_fil <- fun_fil[,-1]
-fun_fil <- fun_fil[rowSums(fun_fil)!=0,]
-intername <- intersect(colnames(fun_fil),metadata$NO)
-fun_fil <- fun_fil[,intername]
-rownames(metadata) <- metadata$NO
-metadata <- metadata[intername,]
-fun_fil$sum <- rowSums(fun_fil)
-fun_fil <- fun_fil[order(fun_fil$sum,decreasing = TRUE),]
-fun_fil <- fun_fil[,-950]
-fun_fil <- fun_fil[-1,]
-fun_fil_t <- t(fun_fil)
-fun_fil_t <- as.data.frame(fun_fil_t)
-fun_fil_t$NO <- rownames(fun_fil_t)
-fun_filt <- merge(fun_fil_t,metadata,by="NO")
-fun_filt <- fun_filt[,c(2:2356,2360)]
-result <- fun_filt %>% 
-  group_by(plant_status) %>% 
-  summarize(across(everything(), mean, na.rm=TRUE))
-# 宽型数据变为长型数据
-resultlong <- result %>% gather(key = "Genus", value = "RelativeAbundance", -plant_status)
-resultlong <- resultlong %>% filter(Genus != "uncultured")
-resultlongD <- resultlong %>% filter(plant_status == "D" & RelativeAbundance != 0)
-resultlongH <- resultlong %>% filter(plant_status == "H" & RelativeAbundance != 0)
-p1 <- list(Disease=resultlongD$Genus,Health=resultlongH$Genus) %>% 
-  ggvenn(show_percentage = T,show_elements = F,label_sep = ",",
-         digits = 1,stroke_color = "black",
-         fill_color = c("#3B4992FF", "#008B45FF"),
-         set_name_color = c("#3B4992FF","#008B45FF"))
-p1
-ggsave("genus_venn.pdf", width = 5.93, height = 7.21, units = "in")
 # 按2000抽平
 otu_rare <- as.data.frame(t(rrarefy(t(fun_fil),2000)))
 # 删除otu_rare中列和小于2000的列
